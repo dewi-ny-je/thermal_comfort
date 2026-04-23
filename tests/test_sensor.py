@@ -1180,6 +1180,10 @@ async def test_unavailable_source_sensor_state_is_propagated(hass, start_ha):
     for sensor_type in DEFAULT_SENSOR_TYPES:
         assert get_sensor(hass, sensor_type).state == STATE_UNAVAILABLE
 
+    dew_point_sensor = get_sensor(hass, SensorType.DEW_POINT)
+    assert ATTR_TEMPERATURE not in dew_point_sensor.attributes
+    assert ATTR_HUMIDITY not in dew_point_sensor.attributes
+
     hass.states.async_set("sensor.test_temperature_sensor", "25.0")
     await hass.async_block_till_done()
     assert get_sensor(hass, SensorType.DEW_POINT).state != STATE_UNAVAILABLE
@@ -1193,6 +1197,10 @@ async def test_unknown_source_sensor_state_is_propagated(hass, start_ha):
 
     for sensor_type in DEFAULT_SENSOR_TYPES:
         assert get_sensor(hass, sensor_type).state == STATE_UNKNOWN
+
+    dew_point_sensor = get_sensor(hass, SensorType.DEW_POINT)
+    assert ATTR_TEMPERATURE not in dew_point_sensor.attributes
+    assert ATTR_HUMIDITY not in dew_point_sensor.attributes
 
     hass.states.async_set("sensor.test_humidity_sensor", "50.0")
     await hass.async_block_till_done()

@@ -612,6 +612,7 @@ class DeviceThermalComfort:
         self._humidity = None
         self._temperature_state = STATE_UNKNOWN
         self._humidity_state = STATE_UNKNOWN
+        self._last_sensor_state = None
         self._should_poll = should_poll
         self.sensors = []
         self._compute_states = {
@@ -1009,7 +1010,11 @@ class DeviceThermalComfort:
 
     async def async_update(self):
         """Update the state."""
-        if self.sensor_state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+        sensor_state = self.sensor_state
+        if sensor_state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+            if sensor_state == self._last_sensor_state:
+                return
+            self._last_sensor_state = sensor_state
             for sensor_type in SENSOR_TYPES:
                 self._compute_states[sensor_type].needs_update = True
             if not self._should_poll:
@@ -1017,6 +1022,7 @@ class DeviceThermalComfort:
             return
 
         if self._temperature is not None and self._humidity is not None:
+            self._last_sensor_state = None
             for sensor_type in SENSOR_TYPES:
                 self._compute_states[sensor_type].needs_update = True
             if not self._should_poll:
@@ -1070,7 +1076,7 @@ def _is_valid_state(state) -> bool:
 def _get_sensor_state_status(state) -> str | None:
     """Return source sensor status if it is unknown or unavailable."""
     if state is None:
-        return STATE_UNKNOWN
+        return None
     if state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
         return state.state
     return None
