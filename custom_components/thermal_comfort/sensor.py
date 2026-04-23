@@ -526,6 +526,11 @@ class SensorThermalComfort(SensorEntity):
 
     async def async_update(self):
         """Update the state of the sensor."""
+        if (state := self._device.sensor_state) is not None:
+            self._attr_native_value = state
+            self._attr_extra_state_attributes = {}
+            return
+
         value = await getattr(self._device, self._sensor_type)()
         if value is None:  # can happen during startup
             return
@@ -605,6 +610,8 @@ class DeviceThermalComfort:
         self._humidity_entity = humidity_entity
         self._temperature = None
         self._humidity = None
+        self._temperature_state = STATE_UNKNOWN
+        self._humidity_state = STATE_UNKNOWN
         self._should_poll = should_poll
         self.sensors = []
         self._compute_states = {
@@ -657,7 +664,15 @@ class DeviceThermalComfort:
             if -89.2 <= temperature <= 56.7:
                 self.extra_state_attributes[ATTR_TEMPERATURE] = temp
                 self._temperature = temperature
+                self._temperature_state = None
                 await self.async_update()
+                return
+        state_status = _get_sensor_state_status(state)
+        if state_status is not None:
+            self._temperature = None
+            self._temperature_state = state_status
+            self.extra_state_attributes.pop(ATTR_TEMPERATURE, None)
+            await self.async_update()
         else:
             _LOGGER.info("Temperature has an invalid value: %s. Can't calculate new states.", state)
 
@@ -671,7 +686,15 @@ class DeviceThermalComfort:
             if 0 < humidity <= 100:
                 self._humidity = float(state.state)
                 self.extra_state_attributes[ATTR_HUMIDITY] = self._humidity
+                self._humidity_state = None
                 await self.async_update()
+                return
+        state_status = _get_sensor_state_status(state)
+        if state_status is not None:
+            self._humidity = None
+            self._humidity_state = state_status
+            self.extra_state_attributes.pop(ATTR_HUMIDITY, None)
+            await self.async_update()
         else:
             _LOGGER.info("Relative humidity has an invalid value: %s. Can't calculate new states.", state)
 
@@ -986,6 +1009,13 @@ class DeviceThermalComfort:
 
     async def async_update(self):
         """Update the state."""
+        if self.sensor_state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+            for sensor_type in SENSOR_TYPES:
+                self._compute_states[sensor_type].needs_update = True
+            if not self._should_poll:
+                await self.async_update_sensors(True)
+            return
+
         if self._temperature is not None and self._humidity is not None:
             for sensor_type in SENSOR_TYPES:
                 self._compute_states[sensor_type].needs_update = True
@@ -1017,6 +1047,15 @@ class DeviceThermalComfort:
         """Return the name."""
         return self._device_info["name"]
 
+    @property
+    def sensor_state(self) -> str | None:
+        """Return aggregated state from source sensors."""
+        if STATE_UNAVAILABLE in (self._temperature_state, self._humidity_state):
+            return STATE_UNAVAILABLE
+        if STATE_UNKNOWN in (self._temperature_state, self._humidity_state):
+            return STATE_UNKNOWN
+        return None
+
 
 def _is_valid_state(state) -> bool:
     if state is not None:
@@ -1026,3 +1065,12 @@ def _is_valid_state(state) -> bool:
             except ValueError:
                 pass
     return False
+
+
+def _get_sensor_state_status(state) -> str | None:
+    """Return source sensor status if it is unknown or unavailable."""
+    if state is None:
+        return STATE_UNKNOWN
+    if state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
+        return state.state
+    return None

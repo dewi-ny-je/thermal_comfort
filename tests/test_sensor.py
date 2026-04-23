@@ -29,7 +29,7 @@ from custom_components.thermal_comfort.sensor import (
 )
 from homeassistant.components.command_line.const import DOMAIN as COMMAND_LINE_DOMAIN
 from homeassistant.components.sensor import DOMAIN as PLATFORM_DOMAIN
-from homeassistant.const import ATTR_TEMPERATURE
+from homeassistant.const import ATTR_TEMPERATURE, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -1169,3 +1169,31 @@ async def test_global_options(hass: HomeAssistant, start_ha: Callable) -> None:
         get_sensor(hass, SensorType.DEW_POINT_PERCEPTION).attributes["icon"]
         == "tc:thermal-perception"
     )
+
+
+@pytest.mark.parametrize(*DEFAULT_TEST_SENSORS)
+async def test_unavailable_source_sensor_state_is_propagated(hass, start_ha):
+    """Test unavailable source sensor state is propagated to computed sensors."""
+    hass.states.async_set("sensor.test_temperature_sensor", STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+
+    for sensor_type in DEFAULT_SENSOR_TYPES:
+        assert get_sensor(hass, sensor_type).state == STATE_UNAVAILABLE
+
+    hass.states.async_set("sensor.test_temperature_sensor", "25.0")
+    await hass.async_block_till_done()
+    assert get_sensor(hass, SensorType.DEW_POINT).state != STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(*DEFAULT_TEST_SENSORS)
+async def test_unknown_source_sensor_state_is_propagated(hass, start_ha):
+    """Test unknown source sensor state is propagated to computed sensors."""
+    hass.states.async_set("sensor.test_humidity_sensor", STATE_UNKNOWN)
+    await hass.async_block_till_done()
+
+    for sensor_type in DEFAULT_SENSOR_TYPES:
+        assert get_sensor(hass, sensor_type).state == STATE_UNKNOWN
+
+    hass.states.async_set("sensor.test_humidity_sensor", "50.0")
+    await hass.async_block_till_done()
+    assert get_sensor(hass, SensorType.ABSOLUTE_HUMIDITY).state != STATE_UNKNOWN
