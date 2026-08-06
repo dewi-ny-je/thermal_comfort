@@ -1,6 +1,42 @@
-__pycache__
+# Byte compiled and optimised python files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution and packaging
+build/
+dist/
+*.egg-info/
+thermal_comfort.zip
+
+# Virtual environments
 pythonenv*
-venv
-.venv
+venv/
+.venv/
+env/
+.python-version
+
+# Test, coverage and type checking artefacts
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.cache/
+htmlcov/
 .coverage
-.idea
+.coverage.*
+coverage.xml
+junit.xml
+
+# Home Assistant test instance
+config/
+*.log
+
+# Release automation
+release-notes.md
+
+# Editors and operating systems
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db

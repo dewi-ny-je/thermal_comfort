@@ -43,5 +43,30 @@ pytest
 ## Style Guideline
 We use [home assistants style guideline](https://developers.home-assistant.io/docs/development_guidelines).
 
+## Commit Messages
+Commit subjects follow [Conventional Commits](https://www.conventionalcommits.org/), because the
+release version is worked out from them:
+
+| Commit                                                | Release       |
+| ----------------------------------------------------- | ------------- |
+| `feat!: ...`, or a `BREAKING CHANGE:` footer          | major, `x.0.0` |
+| `feat: ...`                                           | minor, `1.x.0` |
+| `fix: ...`, `chore: ...`, and every other type        | patch, `1.0.x` |
+
+A scope is optional, so both `feat: ...` and `feat(sensor): ...` work. Merge commits are ignored,
+the commits they bring in are the ones that count.
+
+## Releases
+Pushing to `master` runs the [release workflow](.github/workflows/release.yml), which reads the
+commits since the most recent release tag, works out the next version, and publishes a GitHub
+release with the integration archive attached. It does nothing when there is nothing to release.
+
+The workflow can also be started by hand from the Actions tab, where you can override the version
+part to bump or do a dry run that only reports the version it would pick.
+
+The repository needs one release tag to count from. If there is none yet, either push the baseline
+tag (`git tag v2.2.0 && git push origin v2.2.0`) or run the workflow by hand once with an initial
+version.
+
 ## Contributor Credits
 You can add yourself to [CREDITS.md](CREDITS.md) in your PR. Otherwise you will be added before our next release.

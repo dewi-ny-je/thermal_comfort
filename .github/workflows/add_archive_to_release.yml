@@ -4,44 +4,57 @@ name: Publish archive
 on:
   release:
     types: [published]
+  workflow_call:
+    inputs:
+      tag:
+        description: Tag of the release the archive is attached to
+        required: true
+        type: string
+
+permissions: {}
 
 jobs:
   build:
     name: Publish archive
     runs-on: ubuntu-latest
-
+    permissions:
+      contents: write
     steps:
-      - uses: actions/checkout@v2
-
-      - name: "Set package name"
-        working-directory: ./custom_components
-        run: echo "package=$(ls -F | grep \/$ | sed -n "s/\///g;1p")" >> $GITHUB_ENV
-
-      - name: "Set variables"
-        working-directory: ./custom_components
-        run: |
-          echo "archive=${{ env.package }}.zip" >> $GITHUB_ENV
-          echo "basedir=$(pwd)/${{ env.package }}" >> $GITHUB_ENV
-      
-      - name: "Adjust version number"
-        shell: bash
-        run: |
-          version="${{ github.event.release.tag_name }}"
-          version="${version,,}"
-          version="${version#v}"
-          yq e -P -o=json \
-            -i ".version = \"${version}\"" \
-            "./custom_components/${{ env.package }}/manifest.json"
-
-      - name: "Zip component dir"
-        working-directory: ./custom_components/${{ env.package }}
-        run: zip ${{ env.archive }} -r ./
-
-      - name: Upload binaries to release
-        uses: svenstaro/upload-release-action@v2
+      - uses: actions/checkout@v7
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ./custom_components/${{ env.package }}/${{ env.archive }}
-          asset_name: ${{ env.archive }}
-          tag: ${{ github.ref }}
-          overwrite: true
+          ref: ${{ inputs.tag || github.event.release.tag_name }}
+
+      - name: Set the package name
+        working-directory: ./custom_components
+        run: |
+          package=$(find . -mindepth 1 -maxdepth 1 -type d \
+            -not -name '__pycache__' -printf '%f\n' | sort | head -1)
+          echo "package=${package}" >> "$GITHUB_ENV"
+
+      - name: Set the variables
+        env:
+          TAG: ${{ inputs.tag || github.event.release.tag_name }}
+        run: |
+          {
+            echo "archive=${package}.zip"
+            echo "tag=${TAG}"
+          } >> "$GITHUB_ENV"
+
+      - name: Adjust the version number
+        run: |
+          version="${tag,,}"
+          manifest="custom_components/${package}/manifest.json"
+          jq --arg version "${version#v}" '.version = $version' \
+            "${manifest}" > "${manifest}.new"
+          mv "${manifest}.new" "${manifest}"
+
+      - name: Zip the component directory
+        working-directory: ./custom_components/${{ env.package }}
+        run: zip "${archive}" -r ./
+
+      - name: Attach the archive to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload "${tag}" \
+            "./custom_components/${package}/${archive}" --clobber

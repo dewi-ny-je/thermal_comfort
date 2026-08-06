@@ -6,14 +6,20 @@ on:
   pull_request:
   schedule:
     - cron: "0 0 * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: hacs-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   hacs:
     name: HACS Action
-    runs-on: "ubuntu-latest"
+    runs-on: ubuntu-latest
     steps:
-      - uses: "actions/checkout@v3"
-      - name: HACS Action
-        uses: "hacs/action@main"
+      - name: HACS validation
+        uses: hacs/action@main
         with:
-          category: "integration"
+          category: integration

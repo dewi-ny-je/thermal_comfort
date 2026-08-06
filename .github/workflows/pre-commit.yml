@@ -3,11 +3,26 @@ name: Run pre-commit Check
 # yamllint disable-line rule:truthy
 on:
   pull_request:
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: pre-commit-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   pre-commit:
+    name: pre-commit
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-      - uses: pre-commit/action@v3.0.0
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+      - uses: pre-commit/action@v3.0.1
+        env:
+          # Guards a local workflow, it has nothing to check in CI.
+          SKIP: no-commit-to-branch

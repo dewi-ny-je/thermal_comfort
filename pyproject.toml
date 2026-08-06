@@ -563,6 +563,7 @@ split-on-trailing-comma = false
 "homeassistant/__main__.py" = ["T201"]
 "homeassistant/scripts/*" = ["T201"]
 "script/*" = ["T20"]
+".github/scripts/*" = ["T20"]
 
 [tool.ruff.mccabe]
 max-complexity = 25

@@ -4,11 +4,21 @@ on:
   push:
   pull_request:
   schedule:
-    - cron:  '0 0 * * *'
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: hassfest-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   validate:
-    runs-on: "ubuntu-latest"
+    name: hassfest
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-        - uses: "actions/checkout@v4"
-        - uses: "home-assistant/actions/hassfest@master"
+      - uses: actions/checkout@v7
+      - uses: home-assistant/actions/hassfest@master
