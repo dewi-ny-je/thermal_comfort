@@ -1,2 +1,8 @@
 # Strictly for tests
 pytest-homeassistant-custom-component>=0.13.52
+
+# The tests build their source sensors with the command_line integration.
+# pytest-homeassistant-custom-component only ships Home Assistant core's
+# dependencies, so the requirements command_line declares in its manifest have to
+# be installed by hand or the platform cannot be imported.
+jsonpath-python==1.1.6
