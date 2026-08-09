@@ -48,6 +48,11 @@ NAN_SOURCE_STATES = {
     "sensor.test_humidity_sensor": "nan",
 }
 
+UNKNOWN_SOURCE_STATES = {
+    "sensor.test_temperature_sensor": STATE_UNKNOWN,
+    "sensor.test_humidity_sensor": STATE_UNKNOWN,
+}
+
 DEFAULT_TEST_SENSORS = [
     "domains, config, source_states",
     [
@@ -943,7 +948,7 @@ async def test_zero_degree_celcius(hass, start_ha):
         ),
     ],
 )
-async def get_sensor_types(hass, start_ha):
+async def test_sensor_types(hass, start_ha):
     """Test if configure sensor_types only creates the sensors specified."""
     assert len(hass.states.async_all(PLATFORM_DOMAIN)) == 4
 
@@ -973,7 +978,7 @@ async def get_sensor_types(hass, start_ha):
         ),
     ],
 )
-async def get_sensor_is_nan(hass, start_ha):
+async def test_sensor_is_nan(hass, start_ha):
     """Test if we correctly handle input sensors with NaN as state value."""
     assert len(hass.states.async_all(PLATFORM_DOMAIN)) == LEN_DEFAULT_SENSORS + 2
     for sensor_type in DEFAULT_SENSOR_TYPES:
@@ -992,14 +997,15 @@ async def get_sensor_is_nan(hass, start_ha):
                         "name": "test_thermal_comfort",
                         "temperature_sensor": "sensor.test_temperature_sensor",
                         "humidity_sensor": "sensor.test_humidity_sensor",
+                        "unique_id": "unique_thermal_comfort_id",
                     },
                 },
             },
-            NAN_SOURCE_STATES,
+            UNKNOWN_SOURCE_STATES,
         ),
     ],
 )
-async def get_sensor_unknown(hass, start_ha):
+async def test_sensor_unknown(hass, start_ha):
     """Test handling input sensors with unknown state."""
     assert len(hass.states.async_all(PLATFORM_DOMAIN)) == LEN_DEFAULT_SENSORS + 2
     for sensor_type in DEFAULT_SENSOR_TYPES:
@@ -1008,7 +1014,7 @@ async def get_sensor_unknown(hass, start_ha):
 
 
 @pytest.mark.parametrize(*DEFAULT_TEST_SENSORS)
-async def get_sensor_unavailable(hass, start_ha):
+async def test_sensor_unavailable(hass, start_ha):
     """Test handling unavailable sensors."""
     assert len(hass.states.async_all(PLATFORM_DOMAIN)) == LEN_DEFAULT_SENSORS + 2
     hass.states.async_remove("sensor.test_temperature_sensor")
