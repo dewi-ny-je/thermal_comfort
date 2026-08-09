@@ -23,8 +23,20 @@ def calls(hass):
 
 
 @pytest.fixture
-async def start_ha(hass, domains, config, caplog):
+def source_states():
+    """Source sensor states to seed before the integration is set up.
+
+    Parametrize ``source_states`` with a mapping of entity id to state to give a
+    test the readings it computes from.
+    """
+    return {}
+
+
+@pytest.fixture
+async def start_ha(hass, source_states, domains, config, caplog):
     """Do setup of integration."""
+    for entity_id, state in source_states.items():
+        hass.states.async_set(entity_id, state)
     for domain, count in domains:
         with assert_setup_component(count, domain):
             assert await async_setup_component(

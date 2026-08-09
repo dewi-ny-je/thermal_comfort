@@ -27,7 +27,6 @@ from custom_components.thermal_comfort.sensor import (
     ThomsDiscomfortPerception,
     id_generator,
 )
-from homeassistant.components.command_line.const import DOMAIN as COMMAND_LINE_DOMAIN
 from homeassistant.components.sensor import DOMAIN as PLATFORM_DOMAIN
 from homeassistant.const import ATTR_TEMPERATURE, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
@@ -39,32 +38,27 @@ _LOGGER = logging.getLogger(__name__)
 
 TEST_NAME = "sensor.test_thermal_comfort"
 
-TEMPERATURE_TEST_SENSOR = {
-    PLATFORM_DOMAIN: {
-        "command": "echo 0",
-        "name": "test_temperature_sensor",
-        "value_template": "{{ 25.0 | float }}",
-    },
+DEFAULT_SOURCE_STATES = {
+    "sensor.test_temperature_sensor": "25.0",
+    "sensor.test_humidity_sensor": "50.0",
 }
 
-HUMIDITY_TEST_SENSOR = {
-    PLATFORM_DOMAIN: {
-        "command": "echo 0",
-        "name": "test_humidity_sensor",
-        "value_template": "{{ 50.0 | float }}",
-    },
+NAN_SOURCE_STATES = {
+    "sensor.test_temperature_sensor": "nan",
+    "sensor.test_humidity_sensor": "nan",
+}
+
+UNKNOWN_SOURCE_STATES = {
+    "sensor.test_temperature_sensor": STATE_UNKNOWN,
+    "sensor.test_humidity_sensor": STATE_UNKNOWN,
 }
 
 DEFAULT_TEST_SENSORS = [
-    "domains, config",
+    "domains, config, source_states",
     [
         (
-            [(COMMAND_LINE_DOMAIN, 2), (DOMAIN, 1)],
+            [(DOMAIN, 1)],
             {
-                COMMAND_LINE_DOMAIN: [
-                    TEMPERATURE_TEST_SENSOR,
-                    HUMIDITY_TEST_SENSOR,
-                ],
                 DOMAIN: {
                     PLATFORM_DOMAIN: {
                         "name": "test_thermal_comfort",
@@ -74,6 +68,7 @@ DEFAULT_TEST_SENSORS = [
                     },
                 },
             },
+            DEFAULT_SOURCE_STATES,
         ),
     ],
 ]
@@ -836,15 +831,11 @@ async def test_thoms_discomfort_perception(hass, start_ha):
 
 
 @pytest.mark.parametrize(
-    "domains, config",
+    "domains, config, source_states",
     [
         (
-            [(COMMAND_LINE_DOMAIN, 2), (DOMAIN, 1)],
+            [(DOMAIN, 1)],
             {
-                COMMAND_LINE_DOMAIN: [
-                    TEMPERATURE_TEST_SENSOR,
-                    HUMIDITY_TEST_SENSOR,
-                ],
                 DOMAIN: {
                     PLATFORM_DOMAIN: [
                         {
@@ -868,6 +859,7 @@ async def test_thoms_discomfort_perception(hass, start_ha):
                     ]
                 },
             },
+            DEFAULT_SOURCE_STATES,
         ),
     ],
 )
@@ -897,15 +889,11 @@ async def test_unique_id(hass, start_ha):
 
 
 @pytest.mark.parametrize(
-    "domains, config",
+    "domains, config, source_states",
     [
         (
-            [(COMMAND_LINE_DOMAIN, 2), (DOMAIN, 1)],
+            [(DOMAIN, 1)],
             {
-                COMMAND_LINE_DOMAIN: [
-                    TEMPERATURE_TEST_SENSOR,
-                    HUMIDITY_TEST_SENSOR,
-                ],
                 DOMAIN: {
                     PLATFORM_DOMAIN: {
                         "name": "test_thermal_comfort",
@@ -916,6 +904,7 @@ async def test_unique_id(hass, start_ha):
                     },
                 },
             },
+            DEFAULT_SOURCE_STATES,
         ),
     ],
 )
@@ -937,15 +926,11 @@ async def test_zero_degree_celcius(hass, start_ha):
 
 
 @pytest.mark.parametrize(
-    "domains, config",
+    "domains, config, source_states",
     [
         (
-            [(COMMAND_LINE_DOMAIN, 2), (DOMAIN, 1)],
+            [(DOMAIN, 1)],
             {
-                COMMAND_LINE_DOMAIN: [
-                    TEMPERATURE_TEST_SENSOR,
-                    HUMIDITY_TEST_SENSOR,
-                ],
                 DOMAIN: {
                     PLATFORM_DOMAIN: {
                         "name": "test_thermal_comfort",
@@ -959,10 +944,11 @@ async def test_zero_degree_celcius(hass, start_ha):
                     },
                 },
             },
+            DEFAULT_SOURCE_STATES,
         ),
     ],
 )
-async def get_sensor_types(hass, start_ha):
+async def test_sensor_types(hass, start_ha):
     """Test if configure sensor_types only creates the sensors specified."""
     assert len(hass.states.async_all(PLATFORM_DOMAIN)) == 4
 
@@ -974,27 +960,11 @@ async def get_sensor_types(hass, start_ha):
 
 
 @pytest.mark.parametrize(
-    "domains, config",
+    "domains, config, source_states",
     [
         (
-            [(COMMAND_LINE_DOMAIN, 2), (DOMAIN, 1)],
+            [(DOMAIN, 1)],
             {
-                COMMAND_LINE_DOMAIN: [
-                    {
-                        PLATFORM_DOMAIN: {
-                            "command": "echo 0",
-                            "name": "test_temperature_sensor",
-                            "value_template": "{{ NaN | float }}",
-                        },
-                    },
-                    {
-                        PLATFORM_DOMAIN: {
-                            "command": "echo 0",
-                            "name": "test_humidity_sensor",
-                            "value_template": "{{ NaN | float }}",
-                        },
-                    },
-                ],
                 DOMAIN: {
                     PLATFORM_DOMAIN: {
                         "name": "test_thermal_comfort",
@@ -1004,10 +974,11 @@ async def get_sensor_types(hass, start_ha):
                     },
                 },
             },
+            NAN_SOURCE_STATES,
         ),
     ],
 )
-async def get_sensor_is_nan(hass, start_ha):
+async def test_sensor_is_nan(hass, start_ha):
     """Test if we correctly handle input sensors with NaN as state value."""
     assert len(hass.states.async_all(PLATFORM_DOMAIN)) == LEN_DEFAULT_SENSORS + 2
     for sensor_type in DEFAULT_SENSOR_TYPES:
@@ -1016,39 +987,25 @@ async def get_sensor_is_nan(hass, start_ha):
 
 
 @pytest.mark.parametrize(
-    "domains, config",
+    "domains, config, source_states",
     [
         (
-            [(COMMAND_LINE_DOMAIN, 2), (DOMAIN, 1)],
+            [(DOMAIN, 1)],
             {
-                COMMAND_LINE_DOMAIN: [
-                    {
-                        PLATFORM_DOMAIN: {
-                            "command": "echo 0",
-                            "name": "test_temperature_sensor",
-                            "value_template": "{{ NaN | float }}",
-                        }
-                    },
-                    {
-                        PLATFORM_DOMAIN: {
-                            "command": "echo 0",
-                            "name": "test_humidity_sensor",
-                            "value_template": "{{ NaN | float }}",
-                        }
-                    },
-                ],
                 DOMAIN: {
                     PLATFORM_DOMAIN: {
                         "name": "test_thermal_comfort",
                         "temperature_sensor": "sensor.test_temperature_sensor",
                         "humidity_sensor": "sensor.test_humidity_sensor",
+                        "unique_id": "unique_thermal_comfort_id",
                     },
                 },
             },
+            UNKNOWN_SOURCE_STATES,
         ),
     ],
 )
-async def get_sensor_unknown(hass, start_ha):
+async def test_sensor_unknown(hass, start_ha):
     """Test handling input sensors with unknown state."""
     assert len(hass.states.async_all(PLATFORM_DOMAIN)) == LEN_DEFAULT_SENSORS + 2
     for sensor_type in DEFAULT_SENSOR_TYPES:
@@ -1057,7 +1014,7 @@ async def get_sensor_unknown(hass, start_ha):
 
 
 @pytest.mark.parametrize(*DEFAULT_TEST_SENSORS)
-async def get_sensor_unavailable(hass, start_ha):
+async def test_sensor_unavailable(hass, start_ha):
     """Test handling unavailable sensors."""
     assert len(hass.states.async_all(PLATFORM_DOMAIN)) == LEN_DEFAULT_SENSORS + 2
     hass.states.async_remove("sensor.test_temperature_sensor")

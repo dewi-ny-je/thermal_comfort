@@ -511,6 +511,9 @@ class SensorThermalComfort(SensorEntity):
     @property
     def extra_state_attributes(self):
         """Return the state attributes."""
+        if self._device.sensor_state is not None:
+            # No value could be computed, so the inputs are not meaningful either.
+            return {}
         return dict(
             self._device.extra_state_attributes, **self._attr_extra_state_attributes
         )
@@ -528,10 +531,16 @@ class SensorThermalComfort(SensorEntity):
     async def async_update(self):
         """Update the state of the sensor."""
         if (state := self._device.sensor_state) is not None:
-            self._attr_native_value = state
+            # Home Assistant rejects STATE_UNKNOWN/STATE_UNAVAILABLE as a native
+            # value: numeric sensors require a number and enum sensors require one
+            # of their options. Both cases have to be expressed through the entity
+            # instead, or writing the state raises and the stale value is kept.
+            self._attr_available = state != STATE_UNAVAILABLE
+            self._attr_native_value = None
             self._attr_extra_state_attributes = {}
             return
 
+        self._attr_available = True
         value = await getattr(self._device, self._sensor_type)()
         if value is None:  # can happen during startup
             return
