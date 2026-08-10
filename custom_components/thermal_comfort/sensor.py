@@ -29,6 +29,7 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    UnitOfPressure,
     UnitOfDensity,
     UnitOfTemperature,
 )
@@ -44,7 +45,7 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.template import Template
 from homeassistant.loader import async_get_custom_components
-from homeassistant.util.unit_conversion import TemperatureConverter
+from homeassistant.util.unit_conversion import PressureConverter, TemperatureConverter
 
 from .const import DEFAULT_NAME, DOMAIN
 
@@ -52,6 +53,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_DEW_POINT = "dew_point"
 ATTR_HUMIDITY = "humidity"
+ATTR_PRESSURE = "pressure"
 ATTR_HUMIDEX = "humidex"
 ATTR_FROST_POINT = "frost_point"
 ATTR_RELATIVE_STRAIN_INDEX = "relative_strain_index"
@@ -66,6 +68,7 @@ CONF_SCAN_INTERVAL = "scan_interval"
 
 CONF_TEMPERATURE_SENSOR = "temperature_sensor"
 CONF_HUMIDITY_SENSOR = "humidity_sensor"
+CONF_PRESSURE_SENSOR = "pressure_sensor"
 CONF_POLL = "poll"
 # Default values
 POLL_DEFAULT = False
@@ -328,6 +331,7 @@ SENSOR_SCHEMA = vol.Schema(
         vol.Optional(CONF_NAME): cv.string,
         vol.Required(CONF_TEMPERATURE_SENSOR): cv.entity_id,
         vol.Required(CONF_HUMIDITY_SENSOR): cv.entity_id,
+        vol.Optional(CONF_PRESSURE_SENSOR): cv.entity_id,
         vol.Optional(CONF_ICON_TEMPLATE): cv.template,
         vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
         vol.Required(CONF_UNIQUE_ID): cv.string,
@@ -377,6 +381,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             unique_id=device_config.get(CONF_UNIQUE_ID),
             temperature_entity=device_config.get(CONF_TEMPERATURE_SENSOR),
             humidity_entity=device_config.get(CONF_HUMIDITY_SENSOR),
+            pressure_entity=device_config.get(CONF_PRESSURE_SENSOR),
             should_poll=device_config.get(CONF_POLL, POLL_DEFAULT),
             scan_interval=device_config.get(
                 CONF_SCAN_INTERVAL, timedelta(seconds=SCAN_INTERVAL_DEFAULT)
@@ -424,6 +429,7 @@ async def async_setup_entry(
         unique_id=f"{config_entry.unique_id}",
         temperature_entity=data[CONF_TEMPERATURE_SENSOR],
         humidity_entity=data[CONF_HUMIDITY_SENSOR],
+        pressure_entity=data.get(CONF_PRESSURE_SENSOR),
         should_poll=data[CONF_POLL],
         scan_interval=timedelta(
             seconds=data.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL_DEFAULT)
@@ -603,6 +609,7 @@ class DeviceThermalComfort:
         unique_id: str,
         temperature_entity: str,
         humidity_entity: str,
+        pressure_entity: str | None,
         should_poll: bool,
         scan_interval: timedelta,
     ):
@@ -618,8 +625,10 @@ class DeviceThermalComfort:
         self.extra_state_attributes = {}
         self._temperature_entity = temperature_entity
         self._humidity_entity = humidity_entity
+        self._pressure_entity = pressure_entity
         self._temperature = None
         self._humidity = None
+        self._pressure = None
         self._temperature_state = STATE_UNKNOWN
         self._humidity_state = STATE_UNKNOWN
         self._last_sensor_state = None
@@ -644,6 +653,14 @@ class DeviceThermalComfort:
         hass.async_create_task(
             self._new_humidity_state(hass.states.get(humidity_entity))
         )
+
+        if self._pressure_entity is not None:
+            async_track_state_change_event(
+                self.hass, self._pressure_entity, self.pressure_state_listener
+            )
+            hass.async_create_task(
+                self._new_pressure_state(hass.states.get(pressure_entity))
+            )
 
         hass.async_create_task(self._set_version())
 
@@ -708,6 +725,35 @@ class DeviceThermalComfort:
             await self.async_update()
         else:
             _LOGGER.info("Relative humidity has an invalid value: %s. Can't calculate new states.", state)
+
+    async def pressure_state_listener(self, event):
+        """Handle pressure device state changes."""
+        await self._new_pressure_state(event.data.get("new_state"))
+
+    async def _new_pressure_state(self, state):
+        if _is_valid_state(state):
+            unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT, UnitOfPressure.HPA)
+            pressure = PressureConverter.convert(
+                float(state.state), unit, UnitOfPressure.HPA
+            )
+            if 300 < pressure < 1100:
+                self._pressure = pressure
+                self.extra_state_attributes[ATTR_PRESSURE] = self._pressure
+                await self.async_update()
+        else:
+            _LOGGER.info("Pressure has an invalid value: %s. Can't calculate new states.", state)
+
+    def _actual_pressure(self) -> float:
+        """Return the pressure (hPa) to use for calculations.
+
+        Falls back to the pressure derived from the configured elevation
+        via the barometric formula, which equals 1013.25 hPa at the
+        Home Assistant default elevation of 0 m.
+        """
+        if self._pressure is not None:
+            return self._pressure
+        elevation = self.hass.config.elevation
+        return 1013.25 * pow(1 - 2.25577e-5 * elevation, 5.25588)
 
     @compute_once_lock(SensorType.DEW_POINT)
     async def dew_point(self) -> float:
@@ -951,7 +997,7 @@ class DeviceThermalComfort:
     @compute_once_lock(SensorType.MOIST_AIR_ENTHALPY)
     async def moist_air_enthalpy(self) -> float:
         """Calculate the enthalpy of moist air."""
-        patm = 101325  # standard pressure at sea-level
+        patm = self._actual_pressure() * 100  # hPa to Pa
         c_to_k = 273.15
 
         # ASHRAE fundamentals 2021 pg 1.5

@@ -20,6 +20,7 @@ from .sensor import (
     CONF_ENABLED_SENSORS,
     CONF_HUMIDITY_SENSOR,
     CONF_POLL,
+    CONF_PRESSURE_SENSOR,
     CONF_SCAN_INTERVAL,
     CONF_TEMPERATURE_SENSOR,
     POLL_DEFAULT,
@@ -369,6 +370,9 @@ def build_schema(
     temperature_sensors = get_sensors_by_device_class(
         registry, hass, SensorDeviceClass.TEMPERATURE
     )
+    pressure_sensors = get_sensors_by_device_class(
+        registry, hass, SensorDeviceClass.PRESSURE
+    )
 
     if not temperature_sensors or not humidity_sensors:
         return None
@@ -399,6 +403,18 @@ def build_schema(
                 {
                     "entity": {
                         "include_entities": humidity_sensors,
+                    }
+                }
+            ),
+            vol.Optional(
+                CONF_PRESSURE_SENSOR,
+                description={
+                    "suggested_value": get_value(config_entry, CONF_PRESSURE_SENSOR)
+                },
+            ): selector(
+                {
+                    "entity": {
+                        "include_entities": pressure_sensors,
                     }
                 }
             ),
@@ -456,6 +472,9 @@ def check_input(hass: HomeAssistant, user_input: dict) -> dict:
 
     if p_sensor is None:
         result["base"] = "humidity_not_found"
+
+    if user_input.get(CONF_PRESSURE_SENSOR) and hass.states.get(user_input[CONF_PRESSURE_SENSOR]) is None:
+        result["base"] = "pressure_not_found"
 
     # ToDo: we should not trust user and check:
     #  - that CONF_TEMPERATURE_SENSOR is temperature sensor and have state_class measurement

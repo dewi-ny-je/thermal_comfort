@@ -53,6 +53,14 @@ UNKNOWN_SOURCE_STATES = {
     "sensor.test_humidity_sensor": STATE_UNKNOWN,
 }
 
+PRESSURE_TEST_SENSOR = {
+    PLATFORM_DOMAIN: {
+        "command": "echo 0",
+        "name": "test_pressure_sensor",
+        "value_template": "{{ 950.0 | float }}",
+    },
+}
+
 DEFAULT_TEST_SENSORS = [
     "domains, config, source_states",
     [
@@ -69,6 +77,31 @@ DEFAULT_TEST_SENSORS = [
                 },
             },
             DEFAULT_SOURCE_STATES,
+        ),
+    ],
+]
+
+PRESSURE_SENSOR_TEST_SENSORS = [
+    "domains, config",
+    [
+        (
+            [(COMMAND_LINE_DOMAIN, 3), (DOMAIN, 1)],
+            {
+                COMMAND_LINE_DOMAIN: [
+                    TEMPERATURE_TEST_SENSOR,
+                    HUMIDITY_TEST_SENSOR,
+                    PRESSURE_TEST_SENSOR,
+                ],
+                DOMAIN: {
+                    PLATFORM_DOMAIN: {
+                        "name": "test_thermal_comfort",
+                        "temperature_sensor": "sensor.test_temperature_sensor",
+                        "humidity_sensor": "sensor.test_humidity_sensor",
+                        "pressure_sensor": "sensor.test_pressure_sensor",
+                        "unique_id": "unique_thermal_comfort_id",
+                    },
+                },
+            },
         ),
     ],
 ]
@@ -455,6 +488,26 @@ async def test_moist_air_enthalpy(hass, start_ha):
     await hass.async_block_till_done()
     assert get_sensor(hass, SensorType.MOIST_AIR_ENTHALPY) is not None
     assert get_sensor(hass, SensorType.MOIST_AIR_ENTHALPY).state == "44.4961886780509"
+
+
+@pytest.mark.parametrize(*PRESSURE_SENSOR_TEST_SENSORS)
+async def test_moist_air_enthalpy_with_pressure_sensor(hass, start_ha):
+    """Test if moist air enthalpy uses the configured pressure sensor."""
+    assert get_sensor(hass, SensorType.MOIST_AIR_ENTHALPY) is not None
+    assert get_sensor(hass, SensorType.MOIST_AIR_ENTHALPY).state == "52.02631004897344"
+
+    hass.states.async_set("sensor.test_pressure_sensor", "1000.0")
+    await hass.async_block_till_done()
+    assert get_sensor(hass, SensorType.MOIST_AIR_ENTHALPY).state == "50.66085747255281"
+
+
+@pytest.mark.parametrize(*DEFAULT_TEST_SENSORS)
+async def test_moist_air_enthalpy_with_elevation(hass, start_ha):
+    """Test if moist air enthalpy falls back to pressure derived from elevation."""
+    hass.config.elevation = 500
+    hass.states.async_set("sensor.test_temperature_sensor", "24.0")
+    await hass.async_block_till_done()
+    assert get_sensor(hass, SensorType.MOIST_AIR_ENTHALPY).state == "49.29183257975721"
 
 
 @pytest.mark.parametrize(*DEFAULT_TEST_SENSORS)

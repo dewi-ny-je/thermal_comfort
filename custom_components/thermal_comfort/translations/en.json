@@ -2,7 +2,8 @@
   "options": {
     "error": {
       "temperature_not_found": "Temperature sensor not found",
-      "humidity_not_found": "Humidity sensor not found"
+      "humidity_not_found": "Humidity sensor not found",
+      "pressure_not_found": "Pressure sensor not found"
     },
     "step": {
       "init": {
@@ -10,6 +11,7 @@
         "data": {
           "temperature_sensor": "Temperature sensor",
           "humidity_sensor": "Humidity sensor",
+          "pressure_sensor": "Pressure sensor (optional)",
           "poll": "Enable Polling",
           "scan_interval": "Poll interval (seconds)",
           "custom_icons": "Use custom icons pack"
@@ -24,7 +26,8 @@
     },
     "error": {
       "temperature_not_found": "Temperature sensor not found",
-      "humidity_not_found": "Humidity sensor not found"
+      "humidity_not_found": "Humidity sensor not found",
+      "pressure_not_found": "Pressure sensor not found"
     },
     "step": {
       "user": {
@@ -33,6 +36,7 @@
           "name": "Name",
           "temperature_sensor": "Temperature sensor",
           "humidity_sensor": "Humidity sensor",
+          "pressure_sensor": "Pressure sensor (optional)",
           "poll": "Enable Polling",
           "scan_interval": "Poll interval (seconds)",
           "custom_icons": "Use custom icons pack",
