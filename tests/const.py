@@ -2,6 +2,7 @@
 from custom_components.thermal_comfort.const import (
     CONF_HUMIDITY_SENSOR,
     CONF_POLL,
+    CONF_PRESSURE_SENSOR,
     CONF_TEMPERATURE_SENSOR,
 )
 from custom_components.thermal_comfort.sensor import (
@@ -11,6 +12,8 @@ from custom_components.thermal_comfort.sensor import (
 )
 from homeassistant.const import CONF_NAME
 
+# What the frontend submits. An optional entity selector left empty is omitted
+# from the submitted data rather than sent as an empty value.
 USER_INPUT = {
     CONF_NAME: "New name",
     CONF_TEMPERATURE_SENSOR: "sensor.test_temperature_sensor",
@@ -25,3 +28,10 @@ ADVANCED_USER_INPUT = {
     CONF_NAME: "test_thermal_comfort",
     CONF_ENABLED_SENSORS: [],
 }
+
+# What the flows persist. Optional entity selectors are normalized to an
+# explicit None so that clearing one actually removes it, instead of falling
+# back to the value stored in config_entry.data.
+STORED_USER_INPUT = {**USER_INPUT, CONF_PRESSURE_SENSOR: None}
+
+STORED_ADVANCED_USER_INPUT = {**ADVANCED_USER_INPUT, CONF_PRESSURE_SENSOR: None}

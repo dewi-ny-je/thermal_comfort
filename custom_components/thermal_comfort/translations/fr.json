@@ -2,7 +2,8 @@
   "options": {
     "error": {
       "temperature_not_found": "Le capteur de température n'a pas été trouvé",
-      "humidity_not_found": "Le capteur d'humidité n'a pas été trouvé"
+      "humidity_not_found": "Le capteur d'humidité n'a pas été trouvé",
+      "pressure_not_found": "Le capteur de pression n'a pas été trouvé"
     },
     "step": {
       "init": {
@@ -10,6 +11,7 @@
         "data": {
           "temperature_sensor": "Capteur de température",
           "humidity_sensor": "Capteur d'humidité",
+          "pressure_sensor": "Capteur de pression",
           "poll": "Activer le polling",
           "scan_interval": "Intervalle de polling (en secondes)",
           "custom_icons": "Utiliser un pack d'icônes personnalisé"
@@ -24,7 +26,8 @@
     },
     "error": {
       "temperature_not_found": "Capteur de température introuvable",
-      "humidity_not_found": "Capteur d'humidité introuvable"
+      "humidity_not_found": "Capteur d'humidité introuvable",
+      "pressure_not_found": "Capteur de pression introuvable"
     },
     "step": {
       "user": {
@@ -33,6 +36,7 @@
           "name": "Nom",
           "temperature_sensor": "Capteur de température",
           "humidity_sensor": "Capteur d'humidité",
+          "pressure_sensor": "Capteur de pression",
           "poll": "Activer le polling",
           "scan_interval": "Intervalle de polling (en secondes)",
           "custom_icons": "Utiliser un pack d'icônes personnalisé",

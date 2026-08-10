@@ -2,7 +2,8 @@
   "options": {
     "error": {
       "temperature_not_found": "Temperatuuriandurit ei leitud",
-      "humidity_not_found": "Niiskuseandurit ei leitud"
+      "humidity_not_found": "Niiskuseandurit ei leitud",
+      "pressure_not_found": "Rõhuandurit ei leitud"
     },
     "step": {
       "init": {
@@ -10,6 +11,7 @@
         "data": {
           "temperature_sensor": "Temperatuuriandur",
           "humidity_sensor": "Niiskusandur",
+          "pressure_sensor": "Rõhuandur",
           "poll": "Luba küsitlus",
           "scan_interval": "Küsitluse intervall (sekundites)",
           "custom_icons": "Kasuta kohandatud pisipiltide paketti"
@@ -24,7 +26,8 @@
     },
     "error": {
       "temperature_not_found": "Temperatuuriandurit ei leitud",
-      "humidity_not_found": "Niiskusandurit ei leitud"
+      "humidity_not_found": "Niiskusandurit ei leitud",
+      "pressure_not_found": "Rõhuandurit ei leitud"
     },
     "step": {
       "user": {
@@ -33,6 +36,7 @@
           "name": "Nimi",
           "temperature_sensor": "Temperatuuriandur",
           "humidity_sensor": "Niiskuse andur",
+          "pressure_sensor": "Rõhuandur",
           "poll": "Luba küsitlus",
           "scan_interval": "Küsitluse intervall (sekundites)",
           "custom_icons": "Kasuta kohandatud pisipiltide paketti",

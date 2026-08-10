@@ -11,7 +11,7 @@
         "data": {
           "temperature_sensor": "Temperatursensor",
           "humidity_sensor": "Feuchtigkeitssensor",
-          "pressure_sensor": "Drucksensor (optional)",
+          "pressure_sensor": "Drucksensor",
           "poll": "Polling verwenden",
           "scan_interval": "Poll Intervall (Sekunden)",
           "custom_icons": "Benutzerdefinierte Icons verwenden"
@@ -36,7 +36,7 @@
           "name": "Name",
           "temperature_sensor": "Temperatursensor",
           "humidity_sensor": "Feuchtigkeitssensor",
-          "pressure_sensor": "Drucksensor (optional)",
+          "pressure_sensor": "Drucksensor",
           "poll": "Polling verwenden",
           "scan_interval": "Poll Intervall (Sekunden)",
           "custom_icons": "Benutzerdefinierte Icons verwenden",

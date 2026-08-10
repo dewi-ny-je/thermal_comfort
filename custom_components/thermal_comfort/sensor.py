@@ -29,12 +29,12 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    UnitOfPressure,
     UnitOfDensity,
+    UnitOfPressure,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import TemplateError
+from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers import entity_registry as er
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
@@ -74,6 +74,9 @@ CONF_POLL = "poll"
 POLL_DEFAULT = False
 SCAN_INTERVAL_DEFAULT = 30
 DISPLAY_PRECISION = 2
+# Plausible range for atmospheric pressure at any inhabited elevation, in hPa.
+PRESSURE_MIN_HPA = 300
+PRESSURE_MAX_HPA = 1100
 
 
 class LegacySensorType(StrEnum):
@@ -659,7 +662,7 @@ class DeviceThermalComfort:
                 self.hass, self._pressure_entity, self.pressure_state_listener
             )
             hass.async_create_task(
-                self._new_pressure_state(hass.states.get(pressure_entity))
+                self._new_pressure_state(hass.states.get(self._pressure_entity))
             )
 
         hass.async_create_task(self._set_version())
@@ -731,29 +734,60 @@ class DeviceThermalComfort:
         await self._new_pressure_state(event.data.get("new_state"))
 
     async def _new_pressure_state(self, state):
+        # Unlike temperature and humidity, pressure is optional and has a
+        # fallback, so an unusable reading degrades to that fallback instead of
+        # making the whole device unavailable. That is why no _pressure_state is
+        # tracked and sensor_state does not take pressure into account.
         if _is_valid_state(state):
             unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT, UnitOfPressure.HPA)
-            pressure = PressureConverter.convert(
-                float(state.state), unit, UnitOfPressure.HPA
-            )
-            if 300 < pressure < 1100:
-                self._pressure = pressure
-                self.extra_state_attributes[ATTR_PRESSURE] = self._pressure
-                await self.async_update()
+            try:
+                pressure = PressureConverter.convert(
+                    float(state.state), unit, UnitOfPressure.HPA
+                )
+            except HomeAssistantError:
+                # PressureConverter raises for any unit outside VALID_UNITS.
+                _LOGGER.warning(
+                    "Pressure sensor %s reports an unsupported unit of measurement: %s. "
+                    "Falling back to the pressure derived from the elevation.",
+                    self._pressure_entity,
+                    unit,
+                )
+            else:
+                if PRESSURE_MIN_HPA < pressure < PRESSURE_MAX_HPA:
+                    self._pressure = pressure
+                    self.extra_state_attributes[ATTR_PRESSURE] = self._pressure
+                    await self.async_update()
+                    return
+                _LOGGER.info(
+                    "Pressure is outside the supported range (%s - %s hPa): %s hPa. "
+                    "Falling back to the pressure derived from the elevation.",
+                    PRESSURE_MIN_HPA,
+                    PRESSURE_MAX_HPA,
+                    pressure,
+                )
         else:
-            _LOGGER.info("Pressure has an invalid value: %s. Can't calculate new states.", state)
+            _LOGGER.info(
+                "Pressure has an invalid value: %s. "
+                "Falling back to the pressure derived from the elevation.",
+                state,
+            )
+
+        # Drop a stale reading so the elevation fallback takes over instead of
+        # pinning the last good value indefinitely.
+        if self._pressure is not None:
+            self._pressure = None
+            self.extra_state_attributes.pop(ATTR_PRESSURE, None)
+            await self.async_update()
 
     def _actual_pressure(self) -> float:
         """Return the pressure (hPa) to use for calculations.
 
-        Falls back to the pressure derived from the configured elevation
-        via the barometric formula, which equals 1013.25 hPa at the
-        Home Assistant default elevation of 0 m.
+        Prefers the configured pressure sensor and falls back to the pressure
+        derived from the elevation configured in Home Assistant.
         """
         if self._pressure is not None:
             return self._pressure
-        elevation = self.hass.config.elevation
-        return 1013.25 * pow(1 - 2.25577e-5 * elevation, 5.25588)
+        return _pressure_at_elevation(self.hass.config.elevation)
 
     @compute_once_lock(SensorType.DEW_POINT)
     async def dew_point(self) -> float:
@@ -1117,6 +1151,16 @@ class DeviceThermalComfort:
         if STATE_UNKNOWN in (self._temperature_state, self._humidity_state):
             return STATE_UNKNOWN
         return None
+
+
+def _pressure_at_elevation(elevation: float) -> float:
+    """Return the standard atmospheric pressure (hPa) at a given elevation (m).
+
+    Barometric formula for the ISA troposphere. It returns 1013.25 hPa at 0 m,
+    which is the value this integration used unconditionally before pressure
+    became configurable.
+    """
+    return 1013.25 * pow(1 - 2.25577e-5 * elevation, 5.25588)
 
 
 def _is_valid_state(state) -> bool:

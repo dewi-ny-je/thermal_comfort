@@ -9,6 +9,7 @@ thermal_comfort:
     - name: Living Room
       temperature_sensor: sensor.temperature_livingroom
       humidity_sensor: sensor.humidity_livingroom
+      pressure_sensor: sensor.pressure_livingroom  # optional
       custom_icons: false  # override entry option for sensor
       unique_id: 2f842c63-051a-4c49-9da2-4f04ee677514
     - name: Bathroom
@@ -59,6 +60,19 @@ thermal_comfort:
   <dd>ID of temperature sensor entity to be used for calculations.</dd>
   <dt><strong>humidity_sensor</strong>  <code>string</code> <code>REQUIRED</code></dt>
   <dd>ID of humidity sensor entity to be used for calculations..</dd>
+  <dt><strong>pressure_sensor</strong> <code>string</code> <code>(optional)</code></dt>
+  <dd>
+    ID of an atmospheric pressure sensor entity, used by the moist air enthalpy
+    calculation. When omitted, the pressure is derived from the elevation
+    configured in Home Assistant, which yields the standard sea level pressure
+    of 1013.25 hPa at an elevation of 0 m.
+    <p>Prefer a sensor reporting <em>absolute</em> (station) pressure. Many
+    weather integrations report pressure normalised to mean sea level, which at
+    higher elevations is noticeably above the pressure actually present at your
+    location; in that case leaving this option unset is more accurate.</p>
+    <p>Readings outside 300 - 1100 hPa are ignored, as is a sensor which becomes
+    unavailable, and the elevation based pressure is used instead.</p>
+  </dd>
   <dt><strong>icon_template</strong> <code>template</code> <code>(optional)</code></dt>
   <dd>Defines a template for the icon of the sensor.</dd>
   <dt><strong>entity_picture_template</strong> <code>template</code> <code>(optional)</code></dt>

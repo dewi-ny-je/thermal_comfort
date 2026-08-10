@@ -40,6 +40,7 @@
   <dt><strong>Moist Air Enthalpy</strong> <code>moist_air_enthalpy</code></dt>
   <dd>
     The enthalpy of moist air is the sum of the enthalpy of the dry air and the enthalpy of the water vapour. Enthalpy is the total energy of a thermodynamic system.
+    It is calculated from temperature, relative humidity and atmospheric pressure. The pressure comes from the optional pressure sensor if one is configured, otherwise it is derived from the elevation configured in Home Assistant.
   </dd>
   <dt><strong>Summer Scharlau Perception</strong> <code>summer_scharlau_perception</code></dt>
   <dd>

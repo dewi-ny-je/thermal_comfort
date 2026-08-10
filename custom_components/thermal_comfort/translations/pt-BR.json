@@ -2,7 +2,8 @@
   "options": {
     "error": {
       "temperature_not_found": "Sensor de temperatura não foi localizado",
-      "humidity_not_found": "Sensor de umidade não foi localizado"
+      "humidity_not_found": "Sensor de umidade não foi localizado",
+      "pressure_not_found": "Sensor de pressão não foi localizado"
     },
     "step": {
       "init": {
@@ -10,6 +11,7 @@
         "data": {
           "temperature_sensor": "Sensor de Temperatura",
           "humidity_sensor": "Sensor de Umidade",
+          "pressure_sensor": "Sensor de Pressão",
           "poll": "Ativar Atualização Periódica",
           "scan_interval": "Intervalo de atualização (segundos)",
           "custom_icons": "Usar ícones personalizados"
@@ -24,7 +26,8 @@
     },
     "error": {
       "temperature_not_found": "Sensor de temperatura não foi localizado",
-      "humidity_not_found": "Sensor de umidade não foi localizado"
+      "humidity_not_found": "Sensor de umidade não foi localizado",
+      "pressure_not_found": "Sensor de pressão não foi localizado"
     },
     "step": {
       "user": {
@@ -33,6 +36,7 @@
           "name": "Nome",
           "temperature_sensor": "Sensor de Temperatura",
           "humidity_sensor": "Sensor de Umidade",
+          "pressure_sensor": "Sensor de Pressão",
           "poll": "Ativar Atualizaçãov Periódica",
           "scan_interval": "Intervalo de atualização (segundos)",
           "custom_icons": "Usar ícones personalizados",

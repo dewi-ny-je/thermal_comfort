@@ -27,7 +27,9 @@ def source_states():
     """Source sensor states to seed before the integration is set up.
 
     Parametrize ``source_states`` with a mapping of entity id to state to give a
-    test the readings it computes from.
+    test the readings it computes from. A value may also be a
+    ``(state, attributes)`` tuple when the test needs the source entity to carry
+    a device class or a unit of measurement.
     """
     return {}
 
@@ -36,7 +38,10 @@ def source_states():
 async def start_ha(hass, source_states, domains, config, caplog):
     """Do setup of integration."""
     for entity_id, state in source_states.items():
-        hass.states.async_set(entity_id, state)
+        attributes = None
+        if isinstance(state, tuple):
+            state, attributes = state
+        hass.states.async_set(entity_id, state, attributes)
     for domain, count in domains:
         with assert_setup_component(count, domain):
             assert await async_setup_component(

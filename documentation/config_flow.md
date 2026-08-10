@@ -11,11 +11,18 @@
 
 ![Config Integrations Search](https://raw.githubusercontent.com/dolezsa/thermal_comfort/master/screenshots/config_integrations_search.png)
 
-## Name your virtual device and select the temperature and humidity sensor you want to use
+## Name your virtual device and select the temperature, humidity and, optionally, pressure sensor you want to use
 
 *Note: Sensors carrying the matching device class are listed first, followed by
 any other entity which could plausibly hold a temperature or humidity value, so
 sensors without a device class can be selected as well.*
+
+*The pressure sensor is optional and only affects the moist air enthalpy. Both
+the `pressure` and the `atmospheric_pressure` device classes are offered. If it
+is left empty, the pressure is derived from the elevation configured in Home
+Assistant. Prefer a sensor reporting absolute (station) pressure: many weather
+integrations report pressure normalised to mean sea level, and at higher
+elevations leaving this empty is then more accurate.*
 
 ![Config Thermal Comfort](https://raw.githubusercontent.com/dolezsa/thermal_comfort/master/screenshots/config_thermal_comfort.png)
 

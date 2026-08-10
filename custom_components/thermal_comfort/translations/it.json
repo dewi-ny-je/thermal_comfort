@@ -2,7 +2,8 @@
   "options": {
     "error": {
       "temperature_not_found": "Sensore di temperatura non trovato",
-      "humidity_not_found": "Sensore di umidità non trovato"
+      "humidity_not_found": "Sensore di umidità non trovato",
+      "pressure_not_found": "Sensore di pressione non trovato"
     },
     "step": {
       "init": {
@@ -10,6 +11,7 @@
         "data": {
           "temperature_sensor": "Sensore di temperatura",
           "humidity_sensor": "Sensore di umidità",
+          "pressure_sensor": "Sensore di pressione",
           "poll": "Abilita polling",
           "scan_interval": "Intervallo di polling (secondi)",
           "custom_icons": "Usa il pacchetto di icone personalizzate"
@@ -24,7 +26,8 @@
     },
     "error": {
       "temperature_not_found": "Sensore di temperatura non trovato",
-      "humidity_not_found": "Sensore di umidità non trovato"
+      "humidity_not_found": "Sensore di umidità non trovato",
+      "pressure_not_found": "Sensore di pressione non trovato"
     },
     "step": {
       "user": {
@@ -33,6 +36,7 @@
           "name": "Nome",
           "temperature_sensor": "Sensore di temperatura",
           "humidity_sensor": "Sensore di umidità",
+          "pressure_sensor": "Sensore di pressione",
           "poll": "Abilita polling",
           "scan_interval": "Intervallo di polling (secondi)",
           "custom_icons": "Usa pacchetto icone personalizzato",
