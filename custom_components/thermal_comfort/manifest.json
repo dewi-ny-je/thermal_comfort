@@ -1,10 +1,7 @@
 {
   "domain": "thermal_comfort",
   "name": "Thermal Comfort",
-  "codeowners": [
-    "@dolezsa",
-    "@dewi-ny-je"
-  ],
+  "codeowners": ["@dolezsa", "@dewi-ny-je"],
   "config_flow": true,
   "documentation": "https://github.com/dewi-ny-je/thermal_comfort/blob/master/README.md",
   "iot_class": "calculated",

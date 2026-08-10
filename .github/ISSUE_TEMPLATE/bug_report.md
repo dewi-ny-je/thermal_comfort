@@ -10,7 +10,7 @@ assignees: ''
 **Checklist**
 - [ ] I updated the integration to the latest version available
 - [ ] I cleared the cache of my browser
-- [ ] I verified that I'm really running the lastest version in my browser console
+- [ ] I verified that I'm really running the latest version in my browser console
 - [ ] I checked if there is another issue opened with the same problem
 
 **Describe the bug**
