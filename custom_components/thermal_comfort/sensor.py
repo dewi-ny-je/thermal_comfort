@@ -74,7 +74,8 @@ CONF_POLL = "poll"
 POLL_DEFAULT = False
 SCAN_INTERVAL_DEFAULT = 30
 DISPLAY_PRECISION = 2
-# Plausible range for atmospheric pressure at any inhabited elevation, in hPa.
+# Plausible range for atmospheric pressure at any inhabited elevation, in hPa,
+# bounds included.
 PRESSURE_MIN_HPA = 300
 PRESSURE_MAX_HPA = 1100
 
@@ -753,7 +754,7 @@ class DeviceThermalComfort:
                     unit,
                 )
             else:
-                if PRESSURE_MIN_HPA < pressure < PRESSURE_MAX_HPA:
+                if PRESSURE_MIN_HPA <= pressure <= PRESSURE_MAX_HPA:
                     self._pressure = pressure
                     self.extra_state_attributes[ATTR_PRESSURE] = self._pressure
                     await self.async_update()

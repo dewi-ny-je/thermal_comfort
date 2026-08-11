@@ -59,7 +59,7 @@ thermal_comfort:
   <dt><strong>temperature_sensor</strong> <code>string</code> <code>REQUIRED</code></dt>
   <dd>ID of temperature sensor entity to be used for calculations.</dd>
   <dt><strong>humidity_sensor</strong>  <code>string</code> <code>REQUIRED</code></dt>
-  <dd>ID of humidity sensor entity to be used for calculations..</dd>
+  <dd>ID of humidity sensor entity to be used for calculations.</dd>
   <dt><strong>pressure_sensor</strong> <code>string</code> <code>(optional)</code></dt>
   <dd>
     ID of an atmospheric pressure sensor entity, used by the moist air enthalpy

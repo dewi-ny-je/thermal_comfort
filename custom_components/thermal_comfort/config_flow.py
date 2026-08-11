@@ -381,6 +381,11 @@ def get_value(
         return default
 
 
+# Optional entity selectors in build_schema. Every one of them needs the
+# normalization below, so keep this list in sync when adding another.
+OPTIONAL_ENTITY_KEYS = (CONF_PRESSURE_SENSOR,)
+
+
 def normalize_optional_entities(user_input: dict) -> dict:
     """Persist cleared optional entity selectors as an explicit None.
 
@@ -393,7 +398,7 @@ def normalize_optional_entities(user_input: dict) -> dict:
     """
     return {
         **user_input,
-        CONF_PRESSURE_SENSOR: user_input.get(CONF_PRESSURE_SENSOR) or None,
+        **{key: user_input.get(key) or None for key in OPTIONAL_ENTITY_KEYS},
     }
 
 

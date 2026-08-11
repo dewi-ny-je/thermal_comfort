@@ -18,6 +18,7 @@ from custom_components.thermal_comfort.sensor import (
     CONF_CUSTOM_ICONS,
     CONF_SENSOR_TYPES,
     DEFAULT_SENSOR_TYPES,
+    PRESSURE_MAX_HPA,
     DewPointPerception,
     FrostRisk,
     HumidexPerception,
@@ -544,6 +545,14 @@ async def test_pressure_out_of_range_falls_back_to_elevation(hass, start_ha):
     assert (
         get_sensor(hass, SensorType.MOIST_AIR_ENTHALPY).state == ENTHALPY_AT_SEA_LEVEL
     )
+
+
+@pytest.mark.parametrize(*PRESSURE_SENSOR_TEST_SENSORS)
+async def test_pressure_range_bounds_are_inclusive(hass, start_ha):
+    """Test that a reading exactly on the supported range bound is accepted."""
+    set_pressure(hass, str(float(PRESSURE_MAX_HPA)))
+    await hass.async_block_till_done()
+    assert get_sensor(hass, SensorType.MOIST_AIR_ENTHALPY).state == "48.3077914496152"
 
 
 @pytest.mark.parametrize(*PRESSURE_SENSOR_TEST_SENSORS)
