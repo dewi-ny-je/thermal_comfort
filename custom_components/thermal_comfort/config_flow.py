@@ -7,7 +7,13 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.const import CONF_NAME, Platform, UnitOfDensity, UnitOfRatio
+from homeassistant.const import (
+    CONF_NAME,
+    Platform,
+    UnitOfDensity,
+    UnitOfPressure,
+    UnitOfRatio,
+)
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import entity_registry as er
 import homeassistant.helpers.config_validation as cv
@@ -20,6 +26,7 @@ from .sensor import (
     CONF_ENABLED_SENSORS,
     CONF_HUMIDITY_SENSOR,
     CONF_POLL,
+    CONF_PRESSURE_SENSOR,
     CONF_SCAN_INTERVAL,
     CONF_TEMPERATURE_SENSOR,
     POLL_DEFAULT,
@@ -33,16 +40,21 @@ _LOGGER = logging.getLogger(__name__)
 def get_sensors_by_device_class(
     _er: EntityRegistry,
     _hass: HomeAssistant,
-    device_class: SensorDeviceClass,
+    device_class: SensorDeviceClass | list[SensorDeviceClass],
 ) -> list:
-    """Get sensors of required class from entity registry.
+    """Get sensors of required class(es) from entity registry.
 
-    Entities carrying the requested device class come first, followed by any
-    other entity which could plausibly hold such a value. Home Assistant no
-    longer lets integrations distinguish advanced users in a data entry flow,
+    Entities carrying one of the requested device classes come first, followed
+    by any other entity which could plausibly hold such a value. Home Assistant
+    no longer lets integrations distinguish advanced users in a data entry flow,
     so the wider list is offered to everyone, otherwise sensors without a
     device class would not be selectable at all.
     """
+    device_classes = (
+        [device_class]
+        if isinstance(device_class, SensorDeviceClass)
+        else list(device_class)
+    )
 
     def filter_by_device_class(
         _state: State, _list: list[SensorDeviceClass], should_be_in: bool = True
@@ -62,13 +74,14 @@ def get_sensors_by_device_class(
     def filter_for_device_class_sensor(state: State) -> bool:
         """Filter states by Platform.SENSOR and required device class."""
         return state.domain == Platform.SENSOR and filter_by_device_class(
-            state, [device_class], should_be_in=True
+            state, device_classes, should_be_in=True
         )
 
     def filter_useless_device_class(state: State) -> bool:
         """Filter out states with useless for us device class."""
         device_class_for_exclude = [
             SensorDeviceClass.AQI,
+            SensorDeviceClass.ATMOSPHERIC_PRESSURE,
             SensorDeviceClass.BATTERY,
             SensorDeviceClass.CO,
             SensorDeviceClass.CO2,
@@ -96,6 +109,10 @@ def get_sensors_by_device_class(
             SensorDeviceClass.VOLTAGE,
         ]
         """We are sure that this device classes could not be useful as data source in any case"""
+        # Never exclude the classes we were asked to find.
+        device_class_for_exclude = [
+            dc for dc in device_class_for_exclude if dc not in device_classes
+        ]
         return filter_by_device_class(
             state, device_class_for_exclude, should_be_in=False
         )
@@ -284,7 +301,21 @@ def get_sensors_by_device_class(
             SensorDeviceClass.HUMIDITY: ["°C", "°F", "K"],
             SensorDeviceClass.TEMPERATURE: ["%"],
         }
-        units_for_exclude += additional_units.get(device_class, [])
+        for dc in device_classes:
+            units_for_exclude += additional_units.get(dc, [])
+
+        # Units that must survive the generic exclusion list when they are
+        # exactly what the caller is looking for.
+        wanted_units = {
+            SensorDeviceClass.ATMOSPHERIC_PRESSURE: list(UnitOfPressure),
+            SensorDeviceClass.PRESSURE: list(UnitOfPressure),
+            SensorDeviceClass.HUMIDITY: ["%"],
+            SensorDeviceClass.TEMPERATURE: ["°C", "°F", "K"],
+        }
+        keep_units = {
+            unit for dc in device_classes for unit in wanted_units.get(dc, [])
+        }
+        units_for_exclude = [u for u in units_for_exclude if u not in keep_units]
 
         unit_of_measurement = state.attributes.get(
             "unit_of_measurement", state.attributes.get("native_unit_of_measurement")
@@ -350,6 +381,27 @@ def get_value(
         return default
 
 
+# Optional entity selectors in build_schema. Every one of them needs the
+# normalization below, so keep this list in sync when adding another.
+OPTIONAL_ENTITY_KEYS = (CONF_PRESSURE_SENSOR,)
+
+
+def normalize_optional_entities(user_input: dict) -> dict:
+    """Persist cleared optional entity selectors as an explicit None.
+
+    voluptuous drops absent vol.Optional keys and get_value() falls back to
+    config_entry.data, so without this an optional entity could be set but never
+    unset again.
+
+    :param user_input: user input from a config or options flow step
+    :returns: a copy of the user input with every optional entity key present
+    """
+    return {
+        **user_input,
+        **{key: user_input.get(key) or None for key in OPTIONAL_ENTITY_KEYS},
+    }
+
+
 def build_schema(
     config_entry: config_entries | None,
     hass: HomeAssistant,
@@ -369,6 +421,22 @@ def build_schema(
     temperature_sensors = get_sensors_by_device_class(
         registry, hass, SensorDeviceClass.TEMPERATURE
     )
+    pressure_sensors = get_sensors_by_device_class(
+        registry,
+        hass,
+        # atmospheric_pressure is what weather integrations and ESPHome
+        # BME/BMP sensors use, pressure is the generic class.
+        [SensorDeviceClass.ATMOSPHERIC_PRESSURE, SensorDeviceClass.PRESSURE],
+    )
+
+    # Keep an already configured sensor selectable even if it currently has no
+    # state, so reopening the options flow does not silently drop it.
+    configured_pressure_sensor = get_value(config_entry, CONF_PRESSURE_SENSOR)
+    if (
+        configured_pressure_sensor
+        and configured_pressure_sensor not in pressure_sensors
+    ):
+        pressure_sensors.append(configured_pressure_sensor)
 
     if not temperature_sensors or not humidity_sensors:
         return None
@@ -404,6 +472,24 @@ def build_schema(
             ),
         },
     )
+    # Offering an entity selector with an empty include_entities would show an
+    # unusable, permanently empty picker, so only offer the optional pressure
+    # sensor when there is something to pick.
+    if pressure_sensors:
+        schema = schema.extend(
+            {
+                vol.Optional(
+                    CONF_PRESSURE_SENSOR,
+                    description={"suggested_value": configured_pressure_sensor},
+                ): selector(
+                    {
+                        "entity": {
+                            "include_entities": pressure_sensors,
+                        }
+                    }
+                ),
+            }
+        )
     schema = schema.extend(
         {
             vol.Optional(
@@ -451,11 +537,17 @@ def check_input(hass: HomeAssistant, user_input: dict) -> dict:
     t_sensor = hass.states.get(user_input[CONF_TEMPERATURE_SENSOR])
     p_sensor = hass.states.get(user_input[CONF_HUMIDITY_SENSOR])
 
+    # Only one "base" error is ever rendered, so report the first one instead of
+    # letting a later check overwrite an earlier one.
     if t_sensor is None:
         result["base"] = "temperature_not_found"
-
-    if p_sensor is None:
+    elif p_sensor is None:
         result["base"] = "humidity_not_found"
+    elif (
+        user_input.get(CONF_PRESSURE_SENSOR)
+        and hass.states.get(user_input[CONF_PRESSURE_SENSOR]) is None
+    ):
+        result["base"] = "pressure_not_found"
 
     # ToDo: we should not trust user and check:
     #  - that CONF_TEMPERATURE_SENSOR is temperature sensor and have state_class measurement
@@ -496,7 +588,7 @@ class ThermalComfortConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                 return self.async_create_entry(
                     title=user_input[CONF_NAME],
-                    data=user_input,
+                    data=normalize_optional_entities(user_input),
                 )
 
         schema = build_schema(
@@ -524,7 +616,9 @@ class ThermalComfortOptionsFlow(config_entries.OptionsFlow):
         if user_input is not None:
             _LOGGER.debug("OptionsFlow: going to update configuration %s", user_input)
             if not (errors := check_input(self.hass, user_input)):
-                return self.async_create_entry(title="", data=user_input)
+                return self.async_create_entry(
+                    title="", data=normalize_optional_entities(user_input)
+                )
 
         return self.async_show_form(
             step_id="init",

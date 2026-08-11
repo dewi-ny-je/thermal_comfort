@@ -2,7 +2,8 @@
   "options": {
     "error": {
       "temperature_not_found": "未找到温度传感器",
-      "humidity_not_found": "未找到湿度传感器"
+      "humidity_not_found": "未找到湿度传感器",
+      "pressure_not_found": "未找到气压传感器"
     },
     "step": {
       "init": {
@@ -10,6 +11,7 @@
         "data": {
           "temperature_sensor": "温度传感器",
           "humidity_sensor": "湿度传感器",
+          "pressure_sensor": "气压传感器",
           "poll": "启用轮询",
           "scan_interval": "轮询间隔（秒）",
           "custom_icons": "使用自定义图标包"
@@ -24,7 +26,8 @@
     },
     "error": {
       "temperature_not_found": "未找到温度传感器",
-      "humidity_not_found": "未找到湿度传感器"
+      "humidity_not_found": "未找到湿度传感器",
+      "pressure_not_found": "未找到气压传感器"
     },
     "step": {
       "user": {
@@ -33,6 +36,7 @@
           "name": "名称",
           "temperature_sensor": "温度传感器",
           "humidity_sensor": "湿度传感器",
+          "pressure_sensor": "气压传感器",
           "poll": "启用轮询",
           "scan_interval": "轮询间隔（秒）",
           "custom_icons": "使用自定义图标包",

@@ -2,7 +2,8 @@
   "options": {
     "error": {
       "temperature_not_found": "Teplotný snímač nenájdený",
-      "humidity_not_found": "Snímač vlhkosti nenájdený"
+      "humidity_not_found": "Snímač vlhkosti nenájdený",
+      "pressure_not_found": "Snímač tlaku nenájdený"
     },
     "step": {
       "init": {
@@ -10,6 +11,7 @@
         "data": {
           "temperature_sensor": "Teplotný snímač",
           "humidity_sensor": "Snímač vlhkosti",
+          "pressure_sensor": "Snímač tlaku",
           "poll": "Povoliť dotazovanie",
           "scan_interval": "Interval dotazovania (sekundy)",
           "custom_icons": "Používanie vlastného balíka ikon"
@@ -24,7 +26,8 @@
     },
     "error": {
       "temperature_not_found": "Teplotný snímač nenájdený",
-      "humidity_not_found": "Snímač vlhkosti nenájdený"
+      "humidity_not_found": "Snímač vlhkosti nenájdený",
+      "pressure_not_found": "Snímač tlaku nenájdený"
     },
     "step": {
       "user": {
@@ -33,6 +36,7 @@
           "name": "Názov",
           "temperature_sensor": "Teplotný snímač",
           "humidity_sensor": "Snímač vlhkosti",
+          "pressure_sensor": "Snímač tlaku",
           "poll": "Povoliť dotazovanie",
           "scan_interval": "Interval dotazovania (sekundy)",
           "custom_icons": "Používanie vlastného balíka ikon",

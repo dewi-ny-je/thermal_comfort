@@ -2,7 +2,8 @@
   "options": {
     "error": {
       "temperature_not_found": "Сенсор температури не знайдено",
-      "humidity_not_found": "Сенсор вологості не знайдено"
+      "humidity_not_found": "Сенсор вологості не знайдено",
+      "pressure_not_found": "Сенсор тиску не знайдено"
     },
     "step": {
       "init": {
@@ -10,6 +11,7 @@
         "data": {
           "temperature_sensor": "Сенсор температури",
           "humidity_sensor": "Сенсор вологості",
+          "pressure_sensor": "Сенсор тиску",
           "poll": "Увімкнути опитування",
           "scan_interval": "Інтервал опитування (секунди)",
           "custom_icons": "Використовувати пакет власних значків"
@@ -24,7 +26,8 @@
     },
     "error": {
       "temperature_not_found": "Сенсор температури не знайдено",
-      "humidity_not_found": "Сенсор вологості не знайдено"
+      "humidity_not_found": "Сенсор вологості не знайдено",
+      "pressure_not_found": "Сенсор тиску не знайдено"
     },
     "step": {
       "user": {
@@ -33,6 +36,7 @@
           "name": "Ім'я",
           "temperature_sensor": "Сенсор температури",
           "humidity_sensor": "Сенсор вологості",
+          "pressure_sensor": "Сенсор тиску",
           "poll": "Увімкнути опитування",
           "scan_interval": "Інтервал опитування (секунди)",
           "custom_icons": "Використовувати пакет власних значків",

@@ -2,13 +2,15 @@
   "options": {
     "error": {
       "temperature_not_found": "Temperatursensor hittas inte",
-      "humidity_not_found": "Fuktsensor hittas inte"
+      "humidity_not_found": "Fuktsensor hittas inte",
+      "pressure_not_found": "Trycksensor hittas inte"
     },
     "step": {
       "init": {
         "data": {
           "temperature_sensor": "Temperatursensor",
           "humidity_sensor": "Fuktighetssensor",
+          "pressure_sensor": "Trycksensor",
           "poll": "Aktivera polling",
           "scan_interval": "Poll intervall (sekunder)"
         }
@@ -21,7 +23,8 @@
     },
     "error": {
       "temperature_not_found": "Temperatursensor hittat inte",
-      "humidity_not_found": "Fuktighetssensor hittas inte"
+      "humidity_not_found": "Fuktighetssensor hittas inte",
+      "pressure_not_found": "Trycksensor hittas inte"
     },
     "step": {
       "user": {
@@ -29,6 +32,7 @@
           "name": "Namn",
           "temperature_sensor": "Temperatursensor",
           "humidity_sensor": "Fuktighetssensor",
+          "pressure_sensor": "Trycksensor",
           "poll": "Aktivera polling",
           "scan_interval": "Poll intervall (sekunder)",
           "enabled_sensors": "Aktivera sensorer"

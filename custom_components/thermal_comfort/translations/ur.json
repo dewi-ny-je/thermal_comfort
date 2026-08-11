@@ -2,7 +2,8 @@
   "options": {
     "error": {
       "temperature_not_found": "درجہ حرارت کا سینسر نہیں ملا",
-      "humidity_not_found": "نمی کا سینسر نہیں ملا"
+      "humidity_not_found": "نمی کا سینسر نہیں ملا",
+      "pressure_not_found": "دباؤ کا سینسر نہیں ملا"
     },
     "step": {
       "init": {
@@ -10,6 +11,7 @@
         "data": {
           "temperature_sensor": "درجہ حرارت کا سینسر",
           "humidity_sensor": "نمی کا سینسر",
+          "pressure_sensor": "دباؤ کا سینسر",
           "poll": "پولنگ کو فعال کریں۔",
           "scan_interval": "پول کا وقفہ (سیکنڈ)",
           "custom_icons": "اپنی مرضی کے مطابق آئیکون پیک استعمال کریں۔"
@@ -24,7 +26,8 @@
     },
     "error": {
       "temperature_not_found": "درجہ حرارت کا سینسر نہیں ملا",
-      "humidity_not_found": "نمی کا سینسر نہیں ملا"
+      "humidity_not_found": "نمی کا سینسر نہیں ملا",
+      "pressure_not_found": "دباؤ کا سینسر نہیں ملا"
     },
     "step": {
       "user": {
@@ -33,6 +36,7 @@
           "name": "نام",
           "temperature_sensor": "درجہ حرارت سینسر",
           "humidity_sensor": "نمی کا سینسر",
+          "pressure_sensor": "دباؤ کا سینسر",
           "poll": "پولنگ کو فعال کریں۔",
           "scan_interval": "رائے شماری کا وقفہ (سیکنڈز)",
           "custom_icons": "اپنی مرضی کے مطابق آئیکون پیک استعمال کریں۔",

@@ -2,7 +2,8 @@
   "options": {
     "error": {
       "temperature_not_found": "Temperatuursensor niet gevonden",
-      "humidity_not_found": "Luchtvochtigheidssensor niet gevonden"
+      "humidity_not_found": "Luchtvochtigheidssensor niet gevonden",
+      "pressure_not_found": "Luchtdruksensor niet gevonden"
     },
     "step": {
       "init": {
@@ -10,6 +11,7 @@
         "data": {
           "temperature_sensor": "Temperatuursensor",
           "humidity_sensor": "Luchtvochtigheidssensor",
+          "pressure_sensor": "Luchtdruksensor",
           "poll": "Inschakelen polling",
           "scan_interval": "Poll interval (seconden)",
           "custom_icons": "Gebruikerspecifieke iconen"
@@ -24,7 +26,8 @@
     },
     "error": {
       "temperature_not_found": "Temperatuursensor niet gevonden",
-      "humidity_not_found": "Luchtvochtigheidssensor niet gevonden"
+      "humidity_not_found": "Luchtvochtigheidssensor niet gevonden",
+      "pressure_not_found": "Luchtdruksensor niet gevonden"
     },
     "step": {
       "user": {
@@ -33,6 +36,7 @@
           "name": "Naam",
           "temperature_sensor": "Temperatuursensor",
           "humidity_sensor": "Luchtvochtigheidssensor",
+          "pressure_sensor": "Luchtdruksensor",
           "poll": "Inschakelen polling",
           "scan_interval": "Poll interval (seconden)",
           "custom_icons": "Gebruikerspecifieke iconen",

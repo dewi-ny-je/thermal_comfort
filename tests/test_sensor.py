@@ -10,6 +10,7 @@ from custom_components.thermal_comfort.const import DOMAIN
 from custom_components.thermal_comfort.sensor import (
     ATTR_FROST_POINT,
     ATTR_HUMIDITY,
+    ATTR_PRESSURE,
     ATTR_RELATIVE_STRAIN_INDEX,
     ATTR_SUMMER_SCHARLAU_INDEX,
     ATTR_THOMS_DISCOMFORT_INDEX,
@@ -17,6 +18,7 @@ from custom_components.thermal_comfort.sensor import (
     CONF_CUSTOM_ICONS,
     CONF_SENSOR_TYPES,
     DEFAULT_SENSOR_TYPES,
+    PRESSURE_MAX_HPA,
     DewPointPerception,
     FrostRisk,
     HumidexPerception,
@@ -53,6 +55,18 @@ UNKNOWN_SOURCE_STATES = {
     "sensor.test_humidity_sensor": STATE_UNKNOWN,
 }
 
+PRESSURE_SOURCE_STATES = {
+    **DEFAULT_SOURCE_STATES,
+    "sensor.test_pressure_sensor": (
+        "950.0",
+        {
+            "unit_of_measurement": "hPa",
+            "device_class": "atmospheric_pressure",
+            "state_class": "measurement",
+        },
+    ),
+}
+
 DEFAULT_TEST_SENSORS = [
     "domains, config, source_states",
     [
@@ -69,6 +83,27 @@ DEFAULT_TEST_SENSORS = [
                 },
             },
             DEFAULT_SOURCE_STATES,
+        ),
+    ],
+]
+
+PRESSURE_SENSOR_TEST_SENSORS = [
+    "domains, config, source_states",
+    [
+        (
+            [(DOMAIN, 1)],
+            {
+                DOMAIN: {
+                    PLATFORM_DOMAIN: {
+                        "name": "test_thermal_comfort",
+                        "temperature_sensor": "sensor.test_temperature_sensor",
+                        "humidity_sensor": "sensor.test_humidity_sensor",
+                        "pressure_sensor": "sensor.test_pressure_sensor",
+                        "unique_id": "unique_thermal_comfort_id",
+                    },
+                },
+            },
+            PRESSURE_SOURCE_STATES,
         ),
     ],
 ]
@@ -455,6 +490,94 @@ async def test_moist_air_enthalpy(hass, start_ha):
     await hass.async_block_till_done()
     assert get_sensor(hass, SensorType.MOIST_AIR_ENTHALPY) is not None
     assert get_sensor(hass, SensorType.MOIST_AIR_ENTHALPY).state == "44.4961886780509"
+
+
+# Moist air enthalpy for 25 °C / 50 %RH at the sea level pressure the
+# integration derives from the default elevation of 0 m.
+ENTHALPY_AT_SEA_LEVEL = "50.3219588021847"
+
+
+def set_pressure(hass, value: str, unit: str = "hPa") -> None:
+    """Set the test pressure sensor, keeping its unit of measurement."""
+    hass.states.async_set(
+        "sensor.test_pressure_sensor", value, {"unit_of_measurement": unit}
+    )
+
+
+@pytest.mark.parametrize(*PRESSURE_SENSOR_TEST_SENSORS)
+async def test_moist_air_enthalpy_with_pressure_sensor(hass, start_ha):
+    """Test if moist air enthalpy uses the configured pressure sensor."""
+    assert get_sensor(hass, SensorType.MOIST_AIR_ENTHALPY) is not None
+    assert get_sensor(hass, SensorType.MOIST_AIR_ENTHALPY).state == "52.0263100489734"
+
+    set_pressure(hass, "1000.0")
+    await hass.async_block_till_done()
+    assert get_sensor(hass, SensorType.MOIST_AIR_ENTHALPY).state == "50.6608574725528"
+
+
+@pytest.mark.parametrize(*PRESSURE_SENSOR_TEST_SENSORS)
+async def test_moist_air_enthalpy_converts_pressure_units(hass, start_ha):
+    """Test that a pressure sensor not reporting hPa is converted."""
+    # 95 kPa is the 950 hPa the fixture reports by default.
+    set_pressure(hass, "95.0", "kPa")
+    await hass.async_block_till_done()
+    assert get_sensor(hass, SensorType.MOIST_AIR_ENTHALPY).state == "52.0263100489734"
+
+
+@pytest.mark.parametrize(*PRESSURE_SENSOR_TEST_SENSORS)
+async def test_pressure_sensor_unavailable_falls_back_to_elevation(hass, start_ha):
+    """Test that an unavailable pressure sensor does not pin the last reading."""
+    hass.states.async_set("sensor.test_pressure_sensor", STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+    assert (
+        ATTR_PRESSURE not in get_sensor(hass, SensorType.MOIST_AIR_ENTHALPY).attributes
+    )
+    assert (
+        get_sensor(hass, SensorType.MOIST_AIR_ENTHALPY).state == ENTHALPY_AT_SEA_LEVEL
+    )
+
+
+@pytest.mark.parametrize(*PRESSURE_SENSOR_TEST_SENSORS)
+async def test_pressure_out_of_range_falls_back_to_elevation(hass, start_ha):
+    """Test that a reading outside the supported range is discarded."""
+    set_pressure(hass, "2000.0")
+    await hass.async_block_till_done()
+    assert (
+        get_sensor(hass, SensorType.MOIST_AIR_ENTHALPY).state == ENTHALPY_AT_SEA_LEVEL
+    )
+
+
+@pytest.mark.parametrize(*PRESSURE_SENSOR_TEST_SENSORS)
+async def test_pressure_range_bounds_are_inclusive(hass, start_ha):
+    """Test that a reading exactly on the supported range bound is accepted."""
+    set_pressure(hass, str(float(PRESSURE_MAX_HPA)))
+    await hass.async_block_till_done()
+    assert get_sensor(hass, SensorType.MOIST_AIR_ENTHALPY).state == "48.3077914496152"
+
+
+@pytest.mark.parametrize(*PRESSURE_SENSOR_TEST_SENSORS)
+async def test_pressure_unsupported_unit_falls_back_to_elevation(hass, start_ha):
+    """Test that an unsupported unit does not raise out of the state listener."""
+    set_pressure(hass, "950.0", "furlongs")
+    await hass.async_block_till_done()
+    assert (
+        get_sensor(hass, SensorType.MOIST_AIR_ENTHALPY).state == ENTHALPY_AT_SEA_LEVEL
+    )
+
+
+@pytest.mark.parametrize(*DEFAULT_TEST_SENSORS)
+async def test_moist_air_enthalpy_with_elevation(hass, start_ha):
+    """Test if moist air enthalpy falls back to pressure derived from elevation."""
+    original_elevation = hass.config.elevation
+    try:
+        hass.config.elevation = 500
+        hass.states.async_set("sensor.test_temperature_sensor", "24.0")
+        await hass.async_block_till_done()
+        assert (
+            get_sensor(hass, SensorType.MOIST_AIR_ENTHALPY).state == "49.2918325797572"
+        )
+    finally:
+        hass.config.elevation = original_elevation
 
 
 @pytest.mark.parametrize(*DEFAULT_TEST_SENSORS)

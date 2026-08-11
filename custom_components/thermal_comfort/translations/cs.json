@@ -2,7 +2,8 @@
   "options": {
     "error": {
       "temperature_not_found": "Snímač teploty nenalezen",
-      "humidity_not_found": "Čidlo vlhkosti nenalezeno"
+      "humidity_not_found": "Čidlo vlhkosti nenalezeno",
+      "pressure_not_found": "Čidlo tlaku nenalezeno"
     },
     "step": {
       "init": {
@@ -10,6 +11,7 @@
         "data": {
           "temperature_sensor": "Senzor teploty",
           "humidity_sensor": "Senzor vlhkosti",
+          "pressure_sensor": "Senzor tlaku",
           "poll": "Povolit hlasování",
           "scan_interval": "Interval dotazování (v sekundách)",
           "custom_icons": "Použijte vlastní sadu ikon"
@@ -24,7 +26,8 @@
     },
     "error": {
       "temperature_not_found": "Snímač teploty nenalezen",
-      "humidity_not_found": "Čidlo vlhkosti nenalezeno"
+      "humidity_not_found": "Čidlo vlhkosti nenalezeno",
+      "pressure_not_found": "Čidlo tlaku nenalezeno"
     },
     "step": {
       "user": {
@@ -33,6 +36,7 @@
           "name": "název",
           "temperature_sensor": "Senzor teploty",
           "humidity_sensor": "Senzor vlhkosti",
+          "pressure_sensor": "Senzor tlaku",
           "poll": "Povolit hlasování",
           "scan_interval": "Interval dotazování (v sekundách)",
           "custom_icons": "Použijte vlastní sadu ikon",
